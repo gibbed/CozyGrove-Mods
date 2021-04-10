@@ -22,7 +22,6 @@
 
 using MelonLoader;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Gibbed.CozyGrove.ToggleHUD
 {
@@ -31,30 +30,34 @@ namespace Gibbed.CozyGrove.ToggleHUD
         private const string PreferenceCategoryId = "Gibbed.CozyGrove.ToggleHUD";
         private const string PreferenceHotkeyId = "Hotkey";
 
-        private KeyCode _HotKey = KeyCode.F11;
+        private bool _ToggleEnabled = false;
+        private KeyCode _ToggleHotKey = KeyCode.F11;
 
         public override void OnApplicationStart()
         {
             base.OnApplicationStart();
-            
             TomlKeyCodeSupport.Install();
             MelonPreferences.CreateCategory(PreferenceCategoryId, $"Toggle HUD Settings");
-            MelonPreferences.CreateEntry(PreferenceCategoryId, PreferenceHotkeyId, _HotKey, "Hotkey");
+            MelonPreferences.CreateEntry(PreferenceCategoryId, PreferenceHotkeyId, this._ToggleHotKey, "Hotkey");
             this.ApplyPreferences();
         }
 
         private void ApplyPreferences()
         {
-            _HotKey = MelonPreferences.GetEntryValue<KeyCode>(PreferenceCategoryId, PreferenceHotkeyId);
+            this._ToggleHotKey = MelonPreferences.GetEntryValue<KeyCode>(PreferenceCategoryId, PreferenceHotkeyId);
         }
 
         public override void OnPreferencesSaved() => this.ApplyPreferences();
 
+        public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+        {
+            base.OnSceneWasInitialized(buildIndex, sceneName);
+            this._ToggleEnabled = sceneName == "Game";
+        }
+
         public override void OnUpdate()
         {
-            if (this._HotKey != KeyCode.None &&
-                SceneManager.GetActiveScene().name == "Game" &&
-                Input.GetKeyDown(this._HotKey) == true)
+            if (this._ToggleEnabled == true && Input.GetKeyDown(this._ToggleHotKey) == true)
             {
                 // toggle UI visibility.
                 var instance = GameUI.Instance;
